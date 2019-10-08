@@ -34,15 +34,30 @@ public:
     void rotateWorldRight(float theta);
     void rotateWorldUp(float theta);
     void rotateWorldDown(float theta);
-    
-    /// Move camera along its relative axis
+
+    //TODO: Better/broader names than fly and walk.
+    // but would use the same calculations for movement
+
+    /// Move ("fly") camera along its relative axis and orienation
+    void flyLeft(float delta);
+    void flyRight(float delta);
+    void flyUp(float delta);
+    void flyDown(float delta);
+    void flyForward(float delta);
+    void flyBackward(float delta);
+
+    /// Move camera along its relative axis, ignoring delta Y from orientation. Think "walking"
     void moveLeft(float delta);
     void moveRight(float delta);
+    // Move up/down are slightly different. They ignore X & Z and move vertical
+        // (Really just a alias for moveWorld<Up/Down> for nicer naming. It feels better to
+        //  say "Move Up" when, for example, jumping on a key press than "Shift World Down"
+        // At least in my opinion it does
     void moveUp(float delta);
     void moveDown(float delta);
     void moveForward(float delta);
     void moveBackward(float delta);
-    
+
     // Position of camera in world, NOT eye position
     // pos is multiplied by -1 since camera position is actually a translation of the world
     void setCamPosition(glm::vec3 pos);

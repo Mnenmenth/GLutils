@@ -60,28 +60,28 @@ void Camera::rotateWorldDown(float theta) {
 }
 
 /// Move Camera
-void Camera::moveLeft(float delta) {
+void Camera::flyLeft(float delta) {
     m_CamTranslation += (delta *  m_WorldRight) * m_Orientation;
 }
 
-void Camera::moveRight(float delta) {
-    moveLeft(-delta);
+void Camera::flyRight(float delta) {
+    flyLeft(-delta);
 }
 
-void Camera::moveUp(float delta) {
+void Camera::flyUp(float delta) {
     m_CamTranslation -= (delta * m_WorldUp) * m_Orientation;
 }
 
-void Camera::moveDown(float delta) {
-    moveUp(-delta);
+void Camera::flyDown(float delta) {
+    flyUp(-delta);
 }
 
-void Camera::moveForward(float delta) {
+void Camera::flyForward(float delta) {
     m_CamTranslation -= (delta * m_WorldDirection) * m_Orientation;
 }
 
-void Camera::moveBackward(float delta) {
-    moveForward(-delta);
+void Camera::flyBackward(float delta) {
+    flyForward(-delta);
 }
 
 void Camera::setCamPosition(glm::vec3 pos) {

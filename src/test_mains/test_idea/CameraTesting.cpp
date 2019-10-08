@@ -344,19 +344,38 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        CamTranslate -= WorldDirection * Orient;
+        // Working relative directional move
+        //CamTranslate -= WorldDirection * Orient;
+
+        // Move in camera orient ignoring Y
+        glm::vec3 delta = WorldDirection * Orient;
+        delta.y = 0;
+        CamTranslate -= delta;
     }
     if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        CamTranslate += WorldDirection * Orient;
+        // Working relative directional move
+        //CamTranslate += WorldDirection * Orient;
+
+        glm::vec3 delta = WorldDirection * Orient;
+        delta.y = 0;
+        CamTranslate += delta;
     }
     if(key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        CamTranslate += (1.0f*WorldRight) * Orient;
+        // Working relative directional move
+        //CamTranslate += (1.0f*WorldRight) * Orient;
+        glm::vec3 delta = WorldRight * Orient;
+        delta.y = 0;
+        CamTranslate += delta;
     }
     if(key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        // Working relative directional move
+        //CamTranslate -= (1.0f*WorldRight) * Orient;
 
-        CamTranslate -= (1.0f*WorldRight) * Orient;
+        glm::vec3 delta = WorldRight * Orient;
+        delta.y = 0;
+        CamTranslate -= delta;
     }
     if(key == GLFW_KEY_SPACE && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
