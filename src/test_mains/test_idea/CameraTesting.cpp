@@ -325,9 +325,39 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 
     if(key == GLFW_KEY_R && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        // Working reset camera to origin
+//        Orient = Orient * glm::inverse(Orient);
+//        Orient = glm::normalize(Orient);
 
-        Orient = Orient * glm::inverse(Orient);
+        // Correctly resets pitch
+        glm::vec3 dir = WorldDirection * Orient;
+        dir = glm::normalize(dir);
+
+/*        glm::vec3 wDir = WorldDirection * Orient;
+        wDir.y = 0.0f;
+        wDir = glm::normalize(wDir);
+
+        float angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
+
+        if(dir.y < 0.0f) angle = angle * -1.0f;
+
+        Orient = Orient * glm::angleAxis(angle, WorldRight*Orient);
+        Orient = glm::normalize(Orient);*/
+
+        glm::vec3 up = WorldUp * Orient;
+        up = glm::normalize(up);
+
+        glm::vec3 wUp = WorldUp * Orient;
+        wUp.x = wUp.z = 0.0f;
+        wUp = glm::normalize(wUp);
+
+        float angle = glm::acos(glm::dot(up, wUp) / (glm::length(up) * glm::length(wUp)));
+
+        if(up.z > up.x) angle = angle * -1.0f;
+
+        Orient = Orient * glm::angleAxis(angle, WorldDirection * Orient);
         Orient = glm::normalize(Orient);
+
     }
 
     if(key == GLFW_KEY_Z && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
@@ -373,6 +403,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         // Working relative directional move
         //CamTranslate -= (1.0f*WorldRight) * Orient;
 
+        // Move camera on vector that is on same plane as WorldRight
         glm::vec3 delta = WorldRight * Orient;
         delta.y = 0;
         CamTranslate -= delta;
