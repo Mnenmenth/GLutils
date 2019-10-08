@@ -1,1 +1,2 @@
-Testing of idea implementations, i.e. the final product
+Testing of idea implementations, aka the final product
+These files are for testing implementations only and are guaranteed to be a mess
