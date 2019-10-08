@@ -329,34 +329,66 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 //        Orient = Orient * glm::inverse(Orient);
 //        Orient = glm::normalize(Orient);
 
+// TODO: Check for divide by 0 errors in angle calc
+
+        float angle;
         // Correctly resets pitch
-        glm::vec3 dir = WorldDirection * Orient;
-        dir = glm::normalize(dir);
+        do {
+            glm::vec3 dir = WorldDirection * Orient;
+            dir = glm::normalize(dir);
 
-/*        glm::vec3 wDir = WorldDirection * Orient;
-        wDir.y = 0.0f;
-        wDir = glm::normalize(wDir);
+            glm::vec3 wDir = WorldDirection * Orient;
+            wDir.y = 0.0f;
+            wDir = glm::normalize(wDir);
 
-        float angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
+            angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
+            std::cout << angle << std::endl;
 
-        if(dir.y < 0.0f) angle = angle * -1.0f;
+            if(dir.y < 0.0f) angle = angle * -1.0f;
 
-        Orient = Orient * glm::angleAxis(angle, WorldRight*Orient);
-        Orient = glm::normalize(Orient);*/
+            Orient = Orient * glm::angleAxis(angle, WorldRight*Orient);
+            Orient = glm::normalize(Orient);
+        } while(angle != 0.0f);
 
-        glm::vec3 up = WorldUp * Orient;
-        up = glm::normalize(up);
+        // Working yaw reset
+        do {
+            glm::vec3 dir = WorldDirection * glm::inverse(Orient);
+            dir.y = 0.0f;
+            dir = glm::normalize(dir);
 
-        glm::vec3 wUp = WorldUp * Orient;
-        wUp.x = wUp.z = 0.0f;
-        wUp = glm::normalize(wUp);
+            glm::vec3 wDir = WorldDirection;
+            wDir.y = 0.0f;
+            wDir = glm::normalize(wDir);
 
-        float angle = glm::acos(glm::dot(up, wUp) / (glm::length(up) * glm::length(wUp)));
+            angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
+            std::cout << angle << std::endl;
 
-        if(up.z > up.x) angle = angle * -1.0f;
+            if(dir.x < 0.0f || dir.z > 0.0f) angle = angle * -1.0f;
 
-        Orient = Orient * glm::angleAxis(angle, WorldDirection * Orient);
-        Orient = glm::normalize(Orient);
+            Orient = Orient * glm::angleAxis(angle, WorldUp*Orient);
+            Orient = glm::normalize(Orient);
+        } while(angle != 0.0f);
+
+        // Correctly resets roll
+        do {
+            glm::vec3 right = WorldRight * Orient;
+            right = glm::normalize(right);
+
+            glm::vec3 wRight = WorldRight * Orient;
+            wRight = glm::normalize(wRight);
+            wRight.y = 0.0f;
+
+            angle = glm::acos(glm::dot(right, wRight) / (glm::length(right) * glm::length(wRight)));
+            std::cout << angle << std::endl;
+
+            //if(right.z > right.x) angle = angle * -1.0f;
+            if(right.y > 0.0f) angle = angle * -1.0f;
+
+            Orient = Orient * glm::angleAxis(angle, WorldDirection * Orient);
+            Orient = glm::normalize(Orient);
+        } while(angle != 0.0f);
+
+
 
     }
 
