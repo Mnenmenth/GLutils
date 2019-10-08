@@ -15,7 +15,7 @@ class Transformable {
 public:
     Transformable();
 
-    /// Global transformations
+/// Global transformations
     void scaleGlobal(glm::vec3 scale);
     void setGlobalScale(glm::vec3 scale);
 
@@ -33,7 +33,7 @@ public:
     const glm::quat& getGlobalOrientation() const;
     const glm::vec3& getGlobalPosition() const;
 
-    /// Local transformations
+/// Local transformations
     void scaleLocal(glm::vec3 scale);
     void setLocalScale(glm::vec3 scale);
 
@@ -51,7 +51,7 @@ public:
     const glm::quat& getLocalOrientation() const;
     const glm::vec3& getLocalPosition() const;
 
-    /// Combined global and local transformations
+/// Combined global and local transformations
     glm::quat getScale() const;
     glm::quat getOrientation() const;
     glm::quat getPosition() const;
@@ -65,12 +65,12 @@ public:
     void resetTransformations();
 
 private:
-    /// Global transformations
+/// Global transformations
     glm::vec3 m_globalScale;
     glm::quat m_globalOrientation;
     glm::vec3 m_globalPosition;
 
-    /// Local transformations
+/// Local transformations
     glm::vec3 m_localScale;
     glm::quat m_localOrientation;
     glm::vec3 m_localPosition;

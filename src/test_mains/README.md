@@ -1,0 +1,1 @@
+Different main functions for testing and learning about different OpenGL features/techniques/ideas

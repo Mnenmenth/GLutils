@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(${CMAKE_SOURCE_DIR}/extlib)
 set(GLAD_SRC ${CMAKE_SOURCE_DIR}/extlib/glad/glad.c)
 
-file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c" "src/*.h" "src/*.hpp")
+file(GLOB_RECURSE UTIL_SRC "src/glutils/*.cpp" "src/glutils/*.c" "src/glutils/*.h" "src/glutils/*.hpp")
+set(CURRENT_TEST_SRC "src/test_mains/test_implement/CameraTesting.cpp")
 
-add_executable(GLutils ${SRC} ${GLAD_SRC})
+add_executable(GLutils ${CURRENT_TEST_SRC} ${UTIL_SRC} ${GLAD_SRC})
 target_link_libraries(GLutils glfw3)
