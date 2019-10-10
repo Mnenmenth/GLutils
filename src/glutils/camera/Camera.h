@@ -9,6 +9,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+//TODO: Rename functions
+// moveWorld    ->
+// rotateWorld  ->
+// Rotate       -> set/adjust<Yaw,Pitch,Roll>(float delta)
+// fly          ->
+// move         ->
+// rotate       ->
+//              -> add "locked" version of up axis rotation to refer to rotating camera with an unaffected Y position
+
 class Camera {
 public:
     // WorldDirection is the base direction vector that the camera is initially facing
@@ -34,9 +43,6 @@ public:
     void rotateWorldRight(float theta);
     void rotateWorldUp(float theta);
     void rotateWorldDown(float theta);
-
-    //TODO: Better/broader names than fly and walk.
-    // but would use the same calculations for movement
 
     /// Move ("fly") camera along its relative axis and orienation
     void flyLeft(float delta);

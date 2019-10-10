@@ -332,8 +332,37 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 // TODO: Check for divide by 0 errors in angle calc
 
         float angle;
-        // Correctly resets pitch
+        float dot;
+        float length;
+        glm::vec3 currentVec;
+        glm::vec3 goalVec;
+
+        //TODO: Apply clamp fix to others
+        // Reset pitch
+        std::cout << "Restting pitch" << std::endl;
         do {
+            currentVec = glm::normalize(WorldDirection * Orient);
+            goalVec = glm::vec3(currentVec.x, 0.0f, currentVec.z);
+
+            dot = glm::dot(currentVec, goalVec);
+            length = glm::length(currentVec) * glm::length(goalVec);
+            angle = glm::acos(std::min(std::max(dot, -1.0f), 1.0f) / std::min(std::max(length, -1.0f), 1.0f));
+
+            // Make sure the angle is valid
+            if (!std::isnan(angle)) {
+
+                if (currentVec.y < 0.0f) angle = angle * -1.0f;
+
+                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldRight * Orient));
+            } else {
+                // Offset angle slightly to attempt new reset
+                std::cout << "NaN Angle: Offsetting pitch and reattempting reset" << std::endl;
+                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldRight));
+            }
+        } while(angle != 0.0f);
+
+        // Correctly resets pitch
+/*        do {
             glm::vec3 dir = WorldDirection * Orient;
             dir = glm::normalize(dir);
 
@@ -348,10 +377,36 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
             Orient = Orient * glm::angleAxis(angle, WorldRight*Orient);
             Orient = glm::normalize(Orient);
+        } while(angle != 0.0f);*/
+
+
+        // Reset Yaw
+        std::cout << "Resetting yaw" << std::endl;
+        do {
+            currentVec = glm::normalize(WorldDirection * glm::inverse(Orient));
+            currentVec.y = 0.0f;
+            goalVec = glm::vec3(WorldDirection.x, 0.0f, WorldDirection.z);
+
+            dot = glm::dot(currentVec, goalVec);
+            length = glm::length(currentVec) * glm::length(goalVec);
+            angle = glm::acos(dot / length);
+
+            // Make sure the angle is valid
+            if (!std::isnan(angle)) {
+
+                if (currentVec.x < 0.0f || currentVec.z > 0.0f) angle = angle * -1.0f;
+
+                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldUp * Orient));
+            } else {
+                // Offset angle slightly to attempt new reset
+                std::cout << angle << std::endl;
+                std::cout << "NaN Angle: Offsetting yaw and reattempting reset" << std::endl;
+                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldUp));
+            }
         } while(angle != 0.0f);
 
         // Working yaw reset
-        do {
+/*        do {
             glm::vec3 dir = WorldDirection * glm::inverse(Orient);
             dir.y = 0.0f;
             dir = glm::normalize(dir);
@@ -367,9 +422,26 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
             Orient = Orient * glm::angleAxis(angle, WorldUp*Orient);
             Orient = glm::normalize(Orient);
-        } while(angle != 0.0f);
+        } while(angle != 0.0f);*/
+
+        // Reset Roll
+
+/*        currentVec = glm::normalize(WorldRight * Orient);
+        goalVec = glm::vec3(currentVec.x, 0.0f, currentVec.z);
+
+        do {
+            dot = glm::dot(currentVec, goalVec);
+            if (dot != 0.0f) {
+                angle = glm::acos(dot / (glm::length(currentVec) * glm::length(goalVec)));
+
+                if (currentVec.y > 0.0f) angle = angle * -1.0f;
+
+                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldUp * Orient));
+            }
+        } while(angle != 0.0f);*/
 
         // Correctly resets roll
+/*
         do {
             glm::vec3 right = WorldRight * Orient;
             right = glm::normalize(right);
@@ -387,8 +459,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             Orient = Orient * glm::angleAxis(angle, WorldDirection * Orient);
             Orient = glm::normalize(Orient);
         } while(angle != 0.0f);
-
-
+*/
 
     }
 
