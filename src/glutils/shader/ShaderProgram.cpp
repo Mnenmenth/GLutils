@@ -2,6 +2,7 @@
   * Created by Earl Kennedy
   * https://github.com/Mnenmenth
   *
+  * Modified from https://learnopengl.com/code_viewer_gh.php?code=includes/learnopengl/shader_s.h
   */
 
 #include "ShaderProgram.h"
