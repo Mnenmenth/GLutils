@@ -177,8 +177,8 @@ int main() {
 ///     view = translate(view, cameraPos)
 ///                             ^^ Camera Pos is the camera's position in the world. VERY different than eye position
 ///
-glm::vec3 At(0.0f, 0.0f, -1.f);
-glm::vec3 Pos(0.0f, 0.0f, 0.0f);
+glm::vec3 At(0.0f, 0.0f, -0.01f);
+glm::vec3 Pos(0.0f, 0.0f, 10.0f);
 //glm::vec3 At(0.0f, 0.0f, 0.0f);
 //glm::vec3 Pos(15.0f, 0.0f, 15.0f);
 
@@ -189,6 +189,7 @@ glm::vec3 WorldRight = glm::normalize(glm::cross(WorldDirection, WorldUp));
 glm::quat Orient = glm::angleAxis(0.0f, glm::normalize(At - Pos));
 
 glm::vec3 CamTranslate(0.0f, 0.0f, 0.0f);
+float zoom = 1.0f;
 
 void render() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -198,7 +199,7 @@ void render() {
     /// Setup basic cameras
     glm::mat4 Projection;
     if(Perspective)
-        Projection = glm::perspective(glm::radians(45.0f), (float)WindowDimensions.x / (float)WindowDimensions.y, 0.1f, 100.0f);
+        Projection = glm::perspective(glm::radians(45.0f * zoom), (float)WindowDimensions.x / (float)WindowDimensions.y, 0.1f, 100.0f);
     else
         Projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -0.1f, 100.0f);
 
@@ -329,100 +330,79 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 //        Orient = Orient * glm::inverse(Orient);
 //        Orient = glm::normalize(Orient);
 
-// TODO: Check for divide by 0 errors in angle calc
+///
+//        glm::vec3 r = WorldRight * Orient;
+//        glm::vec3 p = WorldUp * Orient;
+//        std::cout << p.x << p.y << p.z << std::endl;
+//        glm::vec3 p1 = Orient * p * glm::conjugate(Orient);
+//        glm::vec3 p2 = p1 - ((p1*r)/(glm::length(r)*glm::length(r))) * r;
+//        p2 = glm::normalize(p2);
+//        float dot = glm::dot(p, p2);
+//        float length = glm::length(p) * glm::length(p2);
+//        float angle = glm::acos(std::min(std::max(dot, -1.0f), 1.0f) / std::min(std::max(length, -1.0f), 1.0f));
+//        std::cout << "Angle: "<< angle << std::endl;
+//        //if((WorldDirection*Orient).y < 0.0f) angle = -angle;
+//        glm::quat z = glm::angleAxis(angle/2.0f, r);
+//        if(!std::isnan(angle)) Orient = Orient * (z * Orient);
+//        Orient = glm::normalize(Orient);
+//        std::cout << "D:" << (WorldDirection*Orient).y << std::endl;
+        //std::cout << Orient.x << " " << Orient.y << " " << Orient.z << " " << Orient.w << std::endl;
+///
 
-        float angle;
-        float dot;
-        float length;
-        glm::vec3 currentVec;
-        glm::vec3 goalVec;
+//        float angle;
+//        float dot;
+//        float length;
+//        glm::vec3 currentVec;
+//        glm::vec3 goalVec;
 
-        //TODO: Apply clamp fix to others
         // Reset pitch
-        std::cout << "Restting pitch" << std::endl;
-        do {
-            currentVec = glm::normalize(WorldDirection * Orient);
-            goalVec = glm::vec3(currentVec.x, 0.0f, currentVec.z);
-
-            dot = glm::dot(currentVec, goalVec);
-            length = glm::length(currentVec) * glm::length(goalVec);
-            angle = glm::acos(std::min(std::max(dot, -1.0f), 1.0f) / std::min(std::max(length, -1.0f), 1.0f));
-
-            // Make sure the angle is valid
-            if (!std::isnan(angle)) {
-
-                if (currentVec.y < 0.0f) angle = angle * -1.0f;
-
-                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldRight * Orient));
-            } else {
-                // Offset angle slightly to attempt new reset
-                std::cout << "NaN Angle: Offsetting pitch and reattempting reset" << std::endl;
-                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldRight));
-            }
-        } while(angle != 0.0f);
-
-        // Correctly resets pitch
-/*        do {
-            glm::vec3 dir = WorldDirection * Orient;
-            dir = glm::normalize(dir);
-
-            glm::vec3 wDir = WorldDirection * Orient;
-            wDir.y = 0.0f;
-            wDir = glm::normalize(wDir);
-
-            angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
-            std::cout << angle << std::endl;
-
-            if(dir.y < 0.0f) angle = angle * -1.0f;
-
-            Orient = Orient * glm::angleAxis(angle, WorldRight*Orient);
-            Orient = glm::normalize(Orient);
-        } while(angle != 0.0f);*/
-
+//        currentVec = glm::normalize(WorldDirection * Orient);
+//        goalVec = glm::vec3(currentVec.x, 0.0f, currentVec.z);
+//        std::cout << "Resetting pitch" << std::endl;
+//        do {
+//            currentVec = glm::normalize(WorldDirection * Orient);
+//
+//            dot = glm::dot(currentVec, goalVec);
+//            length = glm::length(currentVec) * glm::length(goalVec);
+//            angle = glm::acos(std::min(std::max(dot, -1.0f), 1.0f) / std::min(std::max(length, -1.0f), 1.0f));
+//
+//            // Make sure the angle is valid
+//            if (!std::isnan(angle)) {
+//
+//                if (currentVec.y < 0.0f) angle = angle * -1.0f;
+//
+//                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldRight * Orient));
+//            } else {
+//                // Offset angle slightly to attempt new reset
+//                std::cout << "NaN Angle: Offsetting pitch and reattempting reset" << std::endl;
+//                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldRight));
+//            }
+//        } while(angle != 0.0f);
 
         // Reset Yaw
-        std::cout << "Resetting yaw" << std::endl;
-        do {
-            currentVec = glm::normalize(WorldDirection * glm::inverse(Orient));
-            currentVec.y = 0.0f;
-            goalVec = glm::vec3(WorldDirection.x, 0.0f, WorldDirection.z);
-
-            dot = glm::dot(currentVec, goalVec);
-            length = glm::length(currentVec) * glm::length(goalVec);
-            angle = glm::acos(dot / length);
-
-            // Make sure the angle is valid
-            if (!std::isnan(angle)) {
-
-                if (currentVec.x < 0.0f || currentVec.z > 0.0f) angle = angle * -1.0f;
-
-                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldUp * Orient));
-            } else {
-                // Offset angle slightly to attempt new reset
-                std::cout << angle << std::endl;
-                std::cout << "NaN Angle: Offsetting yaw and reattempting reset" << std::endl;
-                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldUp));
-            }
-        } while(angle != 0.0f);
-
-        // Working yaw reset
-/*        do {
-            glm::vec3 dir = WorldDirection * glm::inverse(Orient);
-            dir.y = 0.0f;
-            dir = glm::normalize(dir);
-
-            glm::vec3 wDir = WorldDirection;
-            wDir.y = 0.0f;
-            wDir = glm::normalize(wDir);
-
-            angle = glm::acos(glm::dot(dir, wDir) / (glm::length(dir) * glm::length(wDir)));
-            std::cout << angle << std::endl;
-
-            if(dir.x < 0.0f || dir.z > 0.0f) angle = angle * -1.0f;
-
-            Orient = Orient * glm::angleAxis(angle, WorldUp*Orient);
-            Orient = glm::normalize(Orient);
-        } while(angle != 0.0f);*/
+//        std::cout << "Resetting yaw" << std::endl;
+//        do {
+//            currentVec = glm::normalize(WorldDirection * glm::inverse(Orient));
+//            currentVec.y = 0.0f;
+//            goalVec = glm::vec3(WorldDirection.x, 0.0f, WorldDirection.z);
+//
+//            dot = glm::dot(currentVec, goalVec);
+//            length = glm::length(currentVec) * glm::length(goalVec);
+//            angle = glm::acos(dot / length);
+//
+//            // Make sure the angle is valid
+//            if (!std::isnan(angle)) {
+//
+//                if (currentVec.x < 0.0f || currentVec.z > 0.0f) angle = angle * -1.0f;
+//
+//                Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldUp * Orient));
+//            } else {
+//                // Offset angle slightly to attempt new reset
+//                std::cout << angle << std::endl;
+//                std::cout << "NaN Angle: Offsetting yaw and reattempting reset" << std::endl;
+//                Orient = glm::normalize(Orient * glm::angleAxis(glm::radians(1.0f), WorldUp));
+//            }
+//        } while(angle != 0.0f);
 
         // Reset Roll
 
@@ -439,27 +419,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 Orient = glm::normalize(Orient * glm::angleAxis(angle, WorldUp * Orient));
             }
         } while(angle != 0.0f);*/
-
-        // Correctly resets roll
-/*
-        do {
-            glm::vec3 right = WorldRight * Orient;
-            right = glm::normalize(right);
-
-            glm::vec3 wRight = WorldRight * Orient;
-            wRight = glm::normalize(wRight);
-            wRight.y = 0.0f;
-
-            angle = glm::acos(glm::dot(right, wRight) / (glm::length(right) * glm::length(wRight)));
-            std::cout << angle << std::endl;
-
-            //if(right.z > right.x) angle = angle * -1.0f;
-            if(right.y > 0.0f) angle = angle * -1.0f;
-
-            Orient = Orient * glm::angleAxis(angle, WorldDirection * Orient);
-            Orient = glm::normalize(Orient);
-        } while(angle != 0.0f);
-*/
 
     }
 
@@ -498,6 +457,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         // Working relative directional move
         //CamTranslate += (1.0f*WorldRight) * Orient;
+
         glm::vec3 delta = WorldRight * Orient;
         delta.y = 0;
         CamTranslate += delta;
@@ -529,7 +489,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         CamTranslate += WorldUp;
     }
     if(key == GLFW_KEY_U && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-        CamTranslate = -1.0f*glm::vec3(3.0f, 5.0f, 15.0f);
+        //CamTranslate = -1.0f*glm::vec3(3.0f, 5.0f, 15.0f);
+        zoom -= 0.1f;
+        if(zoom < 0.1f) zoom = 0.1f;
+
     }
     if(key == GLFW_KEY_P && action == GLFW_PRESS) {
         Perspective = !Perspective;

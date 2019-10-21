@@ -113,7 +113,7 @@ int main() {
 
     shaders = new ShaderProgram("../src/vertex.glsl", "../src/fragment.glsl");
 
-    camera = new Camera(glm::vec3(0,0,0), glm::vec3(0,0,-1), glm::vec3(0,1,0));
+    camera = new Camera(glm::vec3(6, 6, 6), glm::vec3(0,0,0), glm::vec3(0,1,0));
 
     glGenVertexArrays(1, &SolidCube::VAO);
     glGenBuffers(1, &SolidCube::VBO);
@@ -168,6 +168,7 @@ int main() {
 ///                             ^^ Camera Pos is the camera's position in the world. VERY different than eye position
 ///
 
+float zoom = 1.0f;
 void render() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -176,7 +177,7 @@ void render() {
     /// Setup basic cameras
     glm::mat4 Projection;
     if(Perspective)
-        Projection = glm::perspective(glm::radians(45.0f), (float)WindowDimensions.x / (float)WindowDimensions.y, 0.1f, 100.0f);
+        Projection = glm::perspective(glm::radians(45.0f*zoom), (float)WindowDimensions.x / (float)WindowDimensions.y, 0.1f, 100.0f);
     else
         Projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -0.1f, 100.0f);
 
@@ -267,78 +268,84 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if(key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateLeft(Speed);
+        camera->rotateWorldYaw(Speed);
     }
     if(key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateRight(Speed);
+        camera->rotateWorldYaw(-Speed);
     }
     if(key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateUp(Speed);
+        camera->rotatePitch(Speed);
     }
     if(key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateDown(Speed);
+        camera->rotatePitch(-Speed);
     }
 
     if(key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rollLeft(Speed);
+        camera->rotateRoll(Speed);
     }
 
     if(key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rollRight(Speed);
+        camera->rotateRoll(-Speed);
     }
 
     if(key == GLFW_KEY_R && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->resetCamera();
+        camera->resetOrientation();
     }
 
     if(key == GLFW_KEY_Z && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateWorldLeft(Speed);
+        //camera->rotateWorldYaw(Speed);
+        zoom += 0.01f;
+        if(zoom < 0.1f) zoom = 0.1f;
     }
 
     if(key == GLFW_KEY_X && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->rotateWorldRight(Speed);
+        //camera->rotateWorldYaw(-Speed);
+        zoom -= 0.01f;
+        if(zoom > 2.0f) zoom = 1.0f;
     }
 
     if(key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveForward(Speed);
+        camera->moveLong(-Speed);
     }
     if(key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveBackward(Speed);
+        camera->moveLong(Speed);
     }
     if(key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveLeft(Speed);
+        camera->moveLat(Speed);
     }
     if(key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveRight(Speed);
+        camera->moveLat(-Speed);
     }
     if(key == GLFW_KEY_SPACE && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveUp(Speed);
+        camera->moveVert(-Speed);
     }
     if(key == GLFW_KEY_LEFT_CONTROL && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveDown(Speed);
+        camera->moveVert(Speed);
     }
 
     if(key == GLFW_KEY_T && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveWorldDown(Speed);
+        //camera->moveWorldVert(-Speed);
+        camera->zoom(0.1f);
     }
     if(key == GLFW_KEY_G && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 
-        camera->moveWorldUp(Speed);
+        //camera->moveWorldVert(Speed);
+        camera->zoom(-0.1f);
     }
     if(key == GLFW_KEY_U && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
         camera->setCamPosition(glm::vec3(3.0f, 5.0f, 15.0f));

@@ -7,13 +7,15 @@
 #define GLUTILS_RENDERABLE_H
 
 #include "Transformable.h"
+#include "shader/ShaderProgram.h"
 
-class Renderable : public Transformable {
+class Renderable : public Transformable
+{
 public:
-    Renderable();
     // Parent matrix refers to the cumulative matrix of all previous transformations
         // that should also apply to this object in addition to its own global/local transformations
-    virtual void render(glm::mat4 ParentMatrix) = 0;
+    // ShaderProgram is used to make sure the correct shaders are being used when rendering the object
+    virtual void render(ShaderProgram* program, glm::mat4 ParentMatrix) = 0;
 
 };
 
