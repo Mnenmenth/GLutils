@@ -154,12 +154,14 @@ void Camera::resetOrientation() {
 void Camera::zoom(float delta)
 {
     m_EyePos += delta * m_WorldForward;
+    m_Zoom += delta;
 }
 
 void Camera::setZoom(float newZoom)
 {
     resetZoom();
     m_EyePos += newZoom * m_WorldForward;
+    m_Zoom = newZoom;
 }
 
 void Camera::setMinZoom(float zoomMin)
