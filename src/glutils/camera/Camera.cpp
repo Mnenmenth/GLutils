@@ -99,7 +99,7 @@ void Camera::moveLocked(glm::vec3 delta)
 
 void Camera::moveLatLocked(float delta)
 {
-    glm::vec3 deltaLat = m_WorldRight * m_Orientation;
+    glm::vec3 deltaLat = (delta *m_WorldRight) * m_Orientation;
     deltaLat.y = 0.0f;
     m_CamTranslation += deltaLat;
 }
@@ -111,7 +111,7 @@ void Camera::moveVertLocked(float delta)
 
 void Camera::moveLongLocked(float delta)
 {
-    glm::vec3 deltaLong = m_WorldForward * m_Orientation;
+    glm::vec3 deltaLong = (delta * m_WorldForward) * m_Orientation;
     deltaLong.y = 0.0f;
     m_CamTranslation += deltaLong;
 }
@@ -178,7 +178,7 @@ void Camera::setMaxZoom(float zoomMax)
 
 void Camera::resetZoom()
 {
-    m_EyePos -= m_Zoom;
+    m_EyePos -= m_Zoom * m_WorldForward;
     m_Zoom = 0.0f;
 }
 

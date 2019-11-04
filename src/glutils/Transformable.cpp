@@ -158,9 +158,9 @@ const glm::quat& Transformable::getLocalOrientation()   const { return m_localOr
 const glm::vec3& Transformable::getLocalPosition()      const { return m_localPosition; }
 
 /// Combined transformations
-glm::quat Transformable::getScale()         const { return m_globalScale * m_localScale; }
+glm::vec3 Transformable::getScale()         const { return m_globalScale * m_localScale; }
 glm::quat Transformable::getOrientation()   const { return m_globalOrientation * m_localOrientation; }
-glm::quat Transformable::getPosition()      const { return m_globalPosition + m_localPosition; }
+glm::vec3 Transformable::getPosition()      const { return m_globalPosition + m_localPosition; }
 
 glm::mat4 Transformable::getGlobalMatrix()
 {

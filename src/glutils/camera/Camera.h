@@ -95,7 +95,7 @@ public:
     glm::quat getOrientation();
     float getZoom();
     glm::mat4 getViewMatrix();
-    
+
 protected:
     glm::vec3 m_EyePos;
     const glm::vec3 m_LookingAt;

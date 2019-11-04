@@ -15,7 +15,7 @@ public:
     // Parent matrix refers to the cumulative matrix of all previous transformations
         // that should also apply to this object in addition to its own global/local transformations
     // ShaderProgram is used to make sure the correct shaders are being used when rendering the object
-    virtual void render(ShaderProgram* program, glm::mat4 ParentMatrix) = 0;
+    virtual void render() = 0;
 
 };
 

@@ -11,7 +11,8 @@
 #include <vector>
 #include <utility>
 
-class Transformable {
+class Transformable
+{
 public:
     Transformable();
 
@@ -52,9 +53,9 @@ public:
     const glm::vec3& getLocalPosition() const;
 
 /// Combined global and local transformations
-    glm::quat getScale() const;
+    glm::vec3 getScale() const;
     glm::quat getOrientation() const;
-    glm::quat getPosition() const;
+    glm::vec3 getPosition() const;
 
     // Global Transformation Matrix
     glm::mat4 getGlobalMatrix();

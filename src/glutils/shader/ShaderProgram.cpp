@@ -6,21 +6,37 @@
   */
 
 #include "ShaderProgram.h"
+#include <glm/gtc/type_ptr.hpp>
 
 #define glUniform(type, value) glUniform ## type(glGetUniformLocation(m_ID, name), value)
+#define glUniformVec(type, value) glUniform ## type(glGetUniformLocation(m_ID, name), 1, value)
 #define glUniformMatrix(type, value) glUniformMatrix ## type(glGetUniformLocation(m_ID, name), 1, GL_FALSE, value)
 
-const char* ShaderProgram::ShaderTypeNames[] = {"Program", "Vertex", "Fragment"};
+const char* ShaderProgram::ShaderTypeNames[] = {"Program", "Vertex", "Fragment", "Geometry"};
 
-ShaderProgram::ShaderProgram(const char *vertexPath, const char *fragmentPath) {
+ShaderProgram::ShaderProgram(const char* geomPath, const char *vertexPath, const char *fragmentPath) {
+    std::string geomSource;
     std::string vertexSource;
     std::string fragmentSource;
+
+    std::ifstream geomFile;
     std::ifstream vertexFile;
     std::ifstream fragmentFile;
 
+    geomFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try {
+        // Read contents of geom shader file
+        if(geomPath != nullptr)
+        {
+            geomFile.open(geomPath);
+            std::stringstream geomStream;
+            geomStream << geomFile.rdbuf();
+            geomFile.close();
+            geomSource = geomStream.str();
+        }
+
         // Read contents of vertex shader file
         vertexFile.open(vertexPath);
         std::stringstream vertexStream;
@@ -37,6 +53,16 @@ ShaderProgram::ShaderProgram(const char *vertexPath, const char *fragmentPath) {
 
     } catch (std::ifstream::failure &e) {
         std::cout << "Unable to read shader file(s): " << e.what() << std::endl;
+    }
+
+    unsigned int geom;
+    if(geomPath != nullptr)
+    {
+        const char* gSource = geomSource.c_str();
+        geom = glCreateShader(GL_GEOMETRY_SHADER);
+        glShaderSource(geom, 1, &gSource, nullptr);
+        glCompileShader(geom);
+        CompileStatus(geom, GEOMETRY);
     }
 
     unsigned int vertex;
@@ -56,6 +82,7 @@ ShaderProgram::ShaderProgram(const char *vertexPath, const char *fragmentPath) {
     m_ID = glCreateProgram();
     glAttachShader(m_ID, vertex);
     glAttachShader(m_ID, fragment);
+    if(geomPath != nullptr) glAttachShader(m_ID, geom);
     glLinkProgram(m_ID);
     CompileStatus(m_ID, PROGRAM);
 
@@ -76,8 +103,22 @@ void ShaderProgram::setInt(const char *name, GLint value) {
     glUniform(1i, value);
 }
 
+void ShaderProgram::setUInt(const char *name, GLuint value)
+{
+    glUniform(1ui, value);
+}
+
 void ShaderProgram::setFloat(const char *name, GLfloat value) {
     glUniform(1f, value);
+}
+
+void ShaderProgram::setVec3f(const char *name, const glm::vec3 &value) {
+    glUniformVec(3fv, &value[0]);
+}
+
+void ShaderProgram::setVec4f(const char *name, const glm::vec4 &value)
+{
+    glUniformVec(4fv, &value[0]);
 }
 
 void ShaderProgram::setMatrix4f(const char *name, const glm::mat4& value) {
