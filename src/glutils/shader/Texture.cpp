@@ -56,6 +56,11 @@ Texture::Texture(
     m_BindFunc = bind_specDefault;
 }
 
+Texture::~Texture()
+{
+    glDeleteTextures(1, &m_TexID);
+}
+
 void Texture::setBindFunc(BindTexture func)
 {
     m_BindFunc = func;

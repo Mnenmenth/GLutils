@@ -40,6 +40,7 @@ public:
             CreateTexture dataFunc = createTexture_default,
             CreateTexture specDataFunc = createTexture_default
             );
+    ~Texture();
 
     /// Custom bind function, for if the texture should have blend funcs, depth funcs, etc
         //! Complete override of default bind. EVERYTHING about binding texture(s) (regular and spec map) must be done

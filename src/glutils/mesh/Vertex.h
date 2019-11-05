@@ -19,7 +19,7 @@ struct Vertex
     // UV Coordinate
     glm::vec2 t;
 
-    bool operator==(const Vertex& v2)
+    bool operator==(const Vertex& v2) const
     {
         return v == v2.v && n == v2.n && t == v2.t;
     }
