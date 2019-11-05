@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Cube.h"
 
-const std::array<GLfloat, Cube::NUM_INDICES> Cube::vertices =
+const std::array<GLfloat, Cube::NUM_VERTICES> Cube::vertices =
         {
                 // Back Face
                   0.5f,  0.5f, -0.5f, /* Top Left       0*/
@@ -45,9 +45,7 @@ const std::array<GLfloat, Cube::NUM_INDICES> Cube::vertices =
 
         };
 
-std::array<GLuint, Cube::NUM_INDICES> Cube::indices;
-
-const std::array<GLfloat, Cube::NUM_INDICES> Cube::normals =
+const std::array<GLfloat, Cube::NUM_VERTICES> Cube::normals =
         {
                 // Back Face
                  0.0f,  0.0f, -1.0f,   /* Top Left        0*/
@@ -81,6 +79,10 @@ const std::array<GLfloat, Cube::NUM_INDICES> Cube::normals =
                  0.0f, -1.0f,  0.0f,   /* Bottom Right    */
         };
 
+std::array<GLfloat, Cube::NUM_UVCOORDS> Cube::uvcoords;
+
+std::array<GLuint, Cube::NUM_INDICES> Cube::indices;
+
 bool Cube::hasInit = false;
 GLuint Cube::VAO;
 GLuint Cube::VBO;
@@ -96,15 +98,41 @@ void Cube::initStaticObj()
     if(hasInit) return;
     hasInit = true;
 
-    // Fill index array. (4*i) is the stride for each vertex group and (6*i) is the stride for each pair of triangles
+    // Fill uv coord array with same values for each face
+    for(int i = 0; i < 8; i++)
+    {
+        // Stride for UV coords for each face. (2 coords * 4 vertices)
+        int blockStride = (8*i);
+        // Top left
+        uvcoords[0+blockStride] = 0;
+        uvcoords[1+blockStride] = 1;
+        
+        // Top Right
+        uvcoords[2+blockStride] = 1;
+        uvcoords[3+blockStride] = 1;
+
+        // Bottom Left
+        uvcoords[4+blockStride] = 0;
+        uvcoords[5+blockStride] = 0;
+
+        // Bottom Right
+        uvcoords[6+blockStride] = 1;
+        uvcoords[7+blockStride] = 0;
+    }
+
+    // Fill index array.
     for(int i = 0; i < 6; i++)
     {
-        indices[0+(6*i)] = 1+(4*i);
-        indices[1+(6*i)] = 0+(4*i);
-        indices[2+(6*i)] = 2+(4*i);
-        indices[3+(6*i)] = 2+(4*i);
-        indices[4+(6*i)] = 3+(4*i);
-        indices[5+(6*i)] = 1+(4*i);
+        // Stride for pair of triangles (2 triangles * 3 vertices = 6)
+        int blockStride = (6*i);
+        // Stride for vertex-index group (1 index per vertex * 4 vertices for face = 4)
+        int groupStride = (4*i);
+        indices[0+blockStride] = 1+groupStride;
+        indices[1+blockStride] = 0+groupStride;
+        indices[2+blockStride] = 2+groupStride;
+        indices[3+blockStride] = 2+groupStride;
+        indices[4+blockStride] = 3+groupStride;
+        indices[5+blockStride] = 1+groupStride;
     }
 
     glGenVertexArrays(1, &VAO);
@@ -126,8 +154,10 @@ void Cube::initStaticObj()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)sizeof(normals));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), reinterpret_cast<void*>(sizeof(normals)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), reinterpret_cast<void*>(sizeof(normals)+sizeof(uvcoords)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -137,6 +167,6 @@ void Cube::render()
 {
     // Draw cube
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, NUM_INDICES, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }

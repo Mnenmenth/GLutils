@@ -111,7 +111,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    shaders = new ShaderProgram("../src/vertex.glsl", "../src/fragment.glsl");
+    shaders = new ShaderProgram("../src/colorVert.glsl", "../src/colorFrag.glsl");
 
     camera = new Camera(glm::vec3(6, 6, 6), glm::vec3(0,0,0), glm::vec3(0,1,0));
 

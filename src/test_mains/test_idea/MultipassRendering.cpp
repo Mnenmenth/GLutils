@@ -15,10 +15,16 @@
 #include "../../glutils/simpleshapes/Cube.h"
 #include "../../glutils/camera/Camera.h"
 #include "../../glutils/simpleshapes/Sphere.h"
+#include "../../glutils/shader/Texture.h"
 
 glm::vec2 WindowDimensions;
 
-ShaderProgram* shaders;
+ShaderProgram* colorShader;
+ShaderProgram* texShader;
+Texture* blueColor;
+Texture* redColor;
+GLuint blueTex;
+GLuint redTex;
 
 Sphere* sphere;
 Cube* cube;
@@ -32,6 +38,17 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void mouseMoveCallback(GLFWwindow*, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow*, int button, int action, int mods);
 void render();
+
+void draw()
+{
+
+}
+
+void drawTransparent()
+{
+
+}
+
 int main() {
 
     WindowDimensions = glm::vec2(800, 800);
@@ -64,8 +81,10 @@ int main() {
     glViewport(0, 0, WindowDimensions.x, WindowDimensions.y);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
 
-    shaders = new ShaderProgram(nullptr, "../src/colorVert.glsl", "../src/colorFrag.glsl");
+    colorShader = new ShaderProgram(nullptr, "shaders/colorVert.glsl", "shaders/colorFrag.glsl");
+    texShader = new ShaderProgram(nullptr, "shaders/materialVert.glsl", "shaders/materialFrag.glsl");
 
     sphere = new Sphere(0.5f, 10, 10);
     cube = new Cube();
@@ -73,6 +92,51 @@ int main() {
     aobb = new Cube();
     Projection = glm::perspective(45.0f, WindowDimensions.x / WindowDimensions.y, 0.1f, 100.0f);
     cam = new Camera(glm::vec3(5, 5, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+    unsigned char blue[] =
+            {
+                    static_cast<unsigned char>(0.0f * 255),
+                    static_cast<unsigned char>(0.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255)
+            };
+    unsigned char red[] =
+            {
+                    static_cast<unsigned char>(1.0f * 255),
+                    static_cast<unsigned char>(0.0f * 255),
+                    static_cast<unsigned char>(0.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255)
+            };
+
+    blueColor = new Texture(blue);
+    redColor = new Texture(red);
+
+    // custom bind func to ignore specular tex
+    auto bindFunc = [](GLuint texID, GLuint)
+            {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texID);
+            };
+    blueColor->setBindFunc(bindFunc);
+    redColor->setBindFunc(bindFunc);
+
+    glGenTextures(1, &blueTex);
+    glBindTexture(GL_TEXTURE_2D, blueTex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, blue);
+
+    glGenTextures(1, &redTex);
+    glBindTexture(GL_TEXTURE_2D, redTex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
 
 
     /// Timer Variables
@@ -99,30 +163,45 @@ void render()
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    shaders->use();
+    colorShader->use();
 
-    shaders->setMatrix4f("Projection", Projection);
-    shaders->setMatrix4f("View", cam->getViewMatrix());
+    colorShader->setMatrix4f("Projection", Projection);
+    colorShader->setMatrix4f("View", cam->getViewMatrix());
 
-    shaders->setVec4f("Color", glm::vec4(1.0f));
-    shaders->setMatrix4f("Model", sphere->getTransformationMatrix());
+    colorShader->setVec4f("Color", glm::vec4(1.0f));
+    colorShader->setMatrix4f("Model", sphere->getTransformationMatrix());
     sphere->render();
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    shaders->setVec4f("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    colorShader->setVec4f("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
     aobb->render();
 
-    shaders->setVec4f("Color", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    colorShader->setVec4f("Color", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     obb->setLocalScale(sphere->getScale());
     obb->setLocalPosition(sphere->getPosition());
-    shaders->setMatrix4f("Model", obb->getTransformationMatrix());
+    colorShader->setMatrix4f("Model", obb->getTransformationMatrix());
     obb->render();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    shaders->setVec4f("Color", glm::vec4(1.0f));
+    texShader->use();
     cube->setLocalPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
-    shaders->setMatrix4f("Model", cube->getTransformationMatrix());
+    texShader->setMatrix4f("VPMat", Projection*cam->getViewMatrix());
+    texShader->setMatrix4f("MMat", cube->getTransformationMatrix());
+
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, blueTex);
+    blueColor->bind();
     cube->render();
+
+    glEnable(GL_BLEND);
+    glDepthFunc(GL_EQUAL);
+    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
+//    glBindTexture(GL_TEXTURE_2D, redTex);
+    redColor->bind();
+    cube->render();
+    glActiveTexture(0);
+    glDisable(GL_BLEND);
+    glDepthFunc(GL_LESS);
 }
 
 bool obbIntersection(glm::vec3 origin, glm::vec3 direction, glm::vec3 aabb_min, glm::vec3 aabb_max, glm::mat4 Model, float& intersection_dist)
@@ -237,8 +316,8 @@ void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 
     if(selection != nullptr)
     {
-        selection->rotateLocal((ly - ypos) * -0.5f, glm::normalize(cam->getWorldRight()*cam->getOrientation()));
         selection->rotateLocal((lx - xpos) * -0.5f, glm::normalize(cam->getWorldForward()*cam->getOrientation()));
+        selection->rotateLocal((ly - ypos) * -0.5f, cam->getWorldRight()*cam->getOrientation());
     }
     ly = ypos;
     lx = xpos;

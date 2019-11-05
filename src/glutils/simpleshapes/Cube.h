@@ -11,15 +11,18 @@
 class Cube : public Renderable
 {
 public:
-    static const int NUM_INDICES = 72;
+    static constexpr size_t NUM_VERTICES = 72;
+    static constexpr size_t NUM_UVCOORDS = 48;
+    static constexpr size_t NUM_INDICES = 36;
 
     Cube();
     void render() override;
 
 private:
     static bool hasInit;
-    static const std::array<GLfloat, NUM_INDICES> vertices;
-    static const std::array<GLfloat, NUM_INDICES> normals;
+    static const std::array<GLfloat, NUM_VERTICES> vertices;
+    static const std::array<GLfloat, NUM_VERTICES> normals;
+    static std::array<GLfloat, NUM_UVCOORDS> uvcoords;
     static std::array<GLuint, NUM_INDICES> indices;
 
     static GLuint VAO;

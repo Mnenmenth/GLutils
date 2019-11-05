@@ -117,7 +117,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     //glEnable(GL_CULL_FACE);
 
-    shaders = new ShaderProgram("../src/vertex.glsl", "../src/fragment.glsl");
+    shaders = new ShaderProgram("../src/colorVert.glsl", "../src/colorFrag.glsl");
 
     glGenVertexArrays(1, &SolidCube::VAO);
     glGenBuffers(1, &SolidCube::VBO);
