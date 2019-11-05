@@ -20,7 +20,8 @@ public:
 private:
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;
-    std::vector<GLuint> uvcoords;
+    std::vector<GLfloat> uvcoords;
+    std::vector<GLuint> indices;
     //Texture texture;
 };
 
