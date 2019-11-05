@@ -1,2 +1,2 @@
-extlib/** linguist-vendored=false
+extlib/** linguist-vendored
 *.vs linguist-language=GLSL
