@@ -17,10 +17,16 @@
 #include "../../glutils/simpleshapes/Sphere.h"
 #include "../../glutils/shader/Texture.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stbi_image.h>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 glm::vec2 WindowDimensions;
 
 ShaderProgram* colorShader;
 ShaderProgram* texShader;
+Texture* whiteColor;
 Texture* blueColor;
 Texture* redColor;
 GLuint blueTex;
@@ -38,16 +44,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void mouseMoveCallback(GLFWwindow*, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow*, int button, int action, int mods);
 void render();
-
-void draw()
-{
-
-}
-
-void drawTransparent()
-{
-
-}
 
 int main() {
 
@@ -107,36 +103,35 @@ int main() {
                     static_cast<unsigned char>(0.0f * 255),
                     static_cast<unsigned char>(1.0f * 255)
             };
-
-    blueColor = new Texture(blue);
-    redColor = new Texture(red);
-
-    // custom bind func to ignore specular tex
-    auto bindFunc = [](GLuint texID, GLuint)
+    unsigned char white[] =
             {
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, texID);
+                    static_cast<unsigned char>(1.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255),
+                    static_cast<unsigned char>(1.0f * 255)
             };
-    blueColor->setBindFunc(bindFunc);
-    redColor->setBindFunc(bindFunc);
 
-    glGenTextures(1, &blueTex);
-    glBindTexture(GL_TEXTURE_2D, blueTex);
+    whiteColor = new Texture(1, 1, white);
+    blueColor = new Texture(1, 1, blue);
+    redColor = new Texture(1, 1, red);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, blue);
-
-    glGenTextures(1, &redTex);
-    glBindTexture(GL_TEXTURE_2D, redTex);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
+//    glGenTextures(1, &blueTex);
+//    glBindTexture(GL_TEXTURE_2D, blueTex);
+//
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, blue);
+//
+//    glGenTextures(1, &redTex);
+//    glBindTexture(GL_TEXTURE_2D, redTex);
+//
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
 
 
     /// Timer Variables
@@ -163,40 +158,35 @@ void render()
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    colorShader->use();
 
-    colorShader->setMatrix4f("Projection", Projection);
-    colorShader->setMatrix4f("View", cam->getViewMatrix());
+    texShader->use();
 
-    colorShader->setVec4f("Color", glm::vec4(1.0f));
-    colorShader->setMatrix4f("Model", sphere->getTransformationMatrix());
+    texShader->setMatrix4f("VPMat", Projection*cam->getViewMatrix());
+
+    texShader->setMatrix4f("MMat", sphere->getTransformationMatrix());
+    whiteColor->bind();
     sphere->render();
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    colorShader->setVec4f("Color", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    texShader->setMatrix4f("MMat", sphere->getTransformationMatrix());
+    redColor->bind();
     aobb->render();
 
-    colorShader->setVec4f("Color", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     obb->setLocalScale(sphere->getScale());
     obb->setLocalPosition(sphere->getPosition());
-    colorShader->setMatrix4f("Model", obb->getTransformationMatrix());
+    texShader->setMatrix4f("MMat", obb->getTransformationMatrix());
+    blueColor->bind();
     obb->render();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    texShader->use();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
     cube->setLocalPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
-    texShader->setMatrix4f("VPMat", Projection*cam->getViewMatrix());
     texShader->setMatrix4f("MMat", cube->getTransformationMatrix());
-
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, blueTex);
     blueColor->bind();
     cube->render();
 
-    glEnable(GL_BLEND);
     glDepthFunc(GL_EQUAL);
-    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
-//    glBindTexture(GL_TEXTURE_2D, redTex);
     redColor->bind();
     cube->render();
     glActiveTexture(0);
