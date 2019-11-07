@@ -7,7 +7,10 @@
 #define CS370_ASSIGN02_CYLINDER_H
 
 #include "../Renderable.h"
+#include "../mesh/Vertex.h"
+
 /// Cylinder object. Can specify whether the top/bottom should be filled(capped) and how much of the cylinder is created
+// Texture coordinates are probably very messy. However this isn't meant for complex stuff
 class Cylinder : public Renderable
 {
 public:
@@ -16,8 +19,7 @@ public:
     void render() override;
 
 private:
-    std::vector<GLfloat>    vertices;
-    std::vector<GLfloat>    normals;
+    std::vector<Vertex>    vertices;
     std::vector<GLuint>     indices;
     void createCaps(float height, float radius, int slices, float sweep);
 

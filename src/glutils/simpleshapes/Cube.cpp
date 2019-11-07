@@ -52,7 +52,7 @@ GLuint Cube::VAO;
 GLuint Cube::VBO;
 GLuint Cube::EBO;
 
-Cube::Cube()
+Cube::Cube() : Renderable({1.0f, 1.0f, 1.0f})
 {
     initStaticObj();
 }

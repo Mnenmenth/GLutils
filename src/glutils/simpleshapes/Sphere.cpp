@@ -6,7 +6,7 @@
 #include "Sphere.h"
 // http://www.songho.ca/opengl/gl_sphere.html was referenced for generating the sphere vertices/indices
 
-Sphere::Sphere(float radius, int stacks, int slices)
+Sphere::Sphere(float radius, int stacks, int slices) : Renderable({1.0f, 1.0f, 1.0f})
 {
     //! Stacks & Slices min count check is purposefully omitted because funny/interesting
     //! things can be made from low amounts of slices and/or stacks

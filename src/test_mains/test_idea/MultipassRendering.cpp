@@ -16,6 +16,7 @@
 #include "../../glutils/camera/Camera.h"
 #include "../../glutils/simpleshapes/Sphere.h"
 #include "../../glutils/shader/Texture.h"
+#include "../../glutils/simpleshapes/Cylinder.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stbi_image.h>
@@ -33,6 +34,7 @@ Texture* redColor;
 GLuint blueTex;
 GLuint redTex;
 
+Cylinder* cyl;
 Sphere* sphere;
 Cube* cube;
 Cube* obb;
@@ -90,6 +92,7 @@ int main()
     colorShader = new ShaderProgram(nullptr, "shaders/colorVert.glsl", "shaders/colorFrag.glsl");
     texShader = new ShaderProgram(nullptr, "shaders/materialVert.glsl", "shaders/materialFrag.glsl");
 
+    cyl = new Cylinder(1.0f, 0.5f, 10, 10);
     sphere = new Sphere(0.5f, 10, 10);
     sphere->setLocalPosition(glm::vec3(2.0f, 0.0f, 0.0f));
     cube = new Cube();
@@ -198,6 +201,10 @@ void render()
     texShader->use();
 
     texShader->setMatrix4f("VPMat", Projection*cam->getViewMatrix());
+
+    texShader->setMatrix4f("MMat", cyl->getTransformationMatrix());
+    redColor->bind();
+    cyl->render();
 
     texShader->setMatrix4f("MMat", sphere->getTransformationMatrix());
     whiteColor->bind();
@@ -372,7 +379,7 @@ void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
         {
             if(obbIntersection(origin, dir, min, max, obj->getTransformationMatrix(), dist))
             {
-                
+
                 if(intersection == nullptr)
                 {
                     intersection = obj;

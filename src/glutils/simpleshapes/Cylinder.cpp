@@ -6,12 +6,11 @@
 #include "Cylinder.h"
 // Vertices/normals/indices are generated basically the same as the UV sphere, just modified a bit
 
-Cylinder::Cylinder(float height, float radius, int stacks, int slices, bool capped, float sweep)
+Cylinder::Cylinder(float height, float radius, int stacks, int slices, bool capped, float sweep) : Renderable({1.0f, 1.0f, 1.0f})
 {
     /// Reserve space ahead of time for performance
-    vertices.reserve(stacks*(slices+1)*3);
-    normals.reserve(vertices.capacity());
-    indices.reserve(vertices.capacity());
+    vertices.reserve(stacks*(slices+1));
+    indices.reserve(vertices.capacity()*3);
 
     float stackSize = height / (float)(stacks-1);
     float sliceSize = glm::radians(sweep) / (float)slices;
@@ -25,15 +24,16 @@ Cylinder::Cylinder(float height, float radius, int stacks, int slices, bool capp
             float sliceAngle = (float)slice * sliceSize;
             glm::vec3 vertex(radius * glm::cos(sliceAngle), y, radius * glm::sin(sliceAngle));
 
-            vertices.push_back(vertex.x);
-            vertices.push_back(vertex.y);
-            vertices.push_back(vertex.z);
-
-            glm::vec3 normal = glm::normalize(vertex);
-
-            normals.push_back(normal.x);
-            normals.push_back(normal.y);
-            normals.push_back(normal.z);
+            vertices.push_back(
+                    {
+                        vertex,
+                        glm::normalize(vertex),
+                        {
+                                static_cast<float>(slice) / static_cast<float>(slices),
+                                static_cast<float>(stack) / static_cast<float>(stacks)
+                        }
+                    }
+                    );
         }
     }
 
@@ -90,22 +90,22 @@ Cylinder::Cylinder(float height, float radius, int stacks, int slices, bool capp
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Allocate size for buffer
-    glBufferData(GL_ARRAY_BUFFER, arrSize*2, nullptr, GL_STATIC_DRAW);
-    // Add vertices, normals, and colors to buffer
-    glBufferSubData(GL_ARRAY_BUFFER, 0, arrSize, vertices.data());
-    glBufferSubData(GL_ARRAY_BUFFER, arrSize, arrSize, normals.data());
+    // Buffer vertices
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     // Buffer indices
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
     // Set layout positions for shaders
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, v)));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)arrSize);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, n)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, t)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -124,21 +124,21 @@ void Cylinder::createCaps(float height, float radius, int slices, float sweep)
     float sliceSize = glm::radians(sweep) / (float)slices;
 
     // Last index
-    int index = vertices.size()/3;
+    int index = vertices.size();
 
     // Center of the cap
     float capCenter = height/2.0f;
 
     // Center point for the cap
     glm::vec3 center(0.0f, -capCenter, 0.0f);
-    vertices.push_back(center.x);
-    vertices.push_back(center.y);
-    vertices.push_back(center.z);
 
-    glm::vec3 cNormal = glm::normalize(center);
-    normals.push_back(cNormal.x);
-    normals.push_back(cNormal.y);
-    normals.push_back(cNormal.z);
+    vertices.push_back(
+            {
+                    center,
+                    glm::normalize(center),
+                    {0.5f, 0.5f}
+            }
+            );
 
     // Create vertices around the cap top
     for(int slice = 0; slice <= slices; slice++)
@@ -146,15 +146,13 @@ void Cylinder::createCaps(float height, float radius, int slices, float sweep)
         float sliceAngle = (float)slice * sliceSize;
         glm::vec3 vertex(radius * glm::cos(sliceAngle), -capCenter, radius * glm::sin(sliceAngle));
 
-        vertices.push_back(vertex.x);
-        vertices.push_back(vertex.y);
-        vertices.push_back(vertex.z);
-
-        glm::vec3 normal = glm::normalize(vertex);
-
-        normals.push_back(normal.x);
-        normals.push_back(normal.y);
-        normals.push_back(normal.z);
+        vertices.push_back(
+                {
+                        vertex,
+                        glm::normalize(vertex),
+                        {glm::cos(sliceAngle), glm::sin(sliceAngle)}
+                }
+        );
     }
 
     // Index the cap top
@@ -166,32 +164,29 @@ void Cylinder::createCaps(float height, float radius, int slices, float sweep)
     }
 
     // Same as above but reverse ordered indices
-    index = vertices.size()/3;
+    index = vertices.size();
 
     center = glm::vec3(0.0f, capCenter, 0.0f);
-    vertices.push_back(center.x);
-    vertices.push_back(center.y);
-    vertices.push_back(center.z);
-
-    cNormal = glm::normalize(center);
-    normals.push_back(cNormal.x);
-    normals.push_back(cNormal.y);
-    normals.push_back(cNormal.z);
+    vertices.push_back(
+            {
+                    center,
+                    glm::normalize(center),
+                    {0.5f, 0.5f}
+            }
+    );
 
     for(int slice = 0; slice <= slices; slice++)
     {
         float sliceAngle = (float)slice * sliceSize;
         glm::vec3 vertex(radius * glm::cos(sliceAngle), capCenter, radius * glm::sin(sliceAngle));
 
-        vertices.push_back(vertex.x);
-        vertices.push_back(vertex.y);
-        vertices.push_back(vertex.z);
-
-        glm::vec3 normal = glm::normalize(vertex);
-
-        normals.push_back(normal.x);
-        normals.push_back(normal.y);
-        normals.push_back(normal.z);
+        vertices.push_back(
+                {
+                        vertex,
+                        glm::normalize(vertex),
+                        {glm::cos(sliceAngle), glm::sin(sliceAngle)}
+                }
+        );
     }
 
     for (int j = 0; j < slices; j++)
