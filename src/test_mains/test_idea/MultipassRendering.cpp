@@ -327,6 +327,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         {
             selection = sphere;
         }
+        renderHighlight = false;
     }
     else if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
@@ -365,13 +366,23 @@ void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 
         Renderable* intersection = nullptr;
         std::vector<Renderable*> objs = {cube, sphere};
+        float minDist = 0;
 
         for(auto* obj : objs)
         {
             if(obbIntersection(origin, dir, min, max, obj->getTransformationMatrix(), dist))
             {
-                intersection = obj;
-                break;
+                
+                if(intersection == nullptr)
+                {
+                    intersection = obj;
+                    minDist = dist;
+                }
+                else if(dist < minDist)
+                {
+                    intersection = obj;
+                    minDist = dist;
+                }
             }
         }
 
@@ -381,6 +392,10 @@ void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
             highlight->setLocalOrientation(intersection->getOrientation());
             highlight->setLocalScale(intersection->getScale()*1.2f);
             renderHighlight = true;
+        }
+        else
+        {
+            renderHighlight = false;
         }
     }
     ly = ypos;
