@@ -33,6 +33,8 @@ void Texture::bind_specDefault(GLuint texID, GLuint specTexID)
     glBindTexture(GL_TEXTURE_2D, specTexID);
 }
 
+void Texture::unbind_default(GLuint, GLuint) {}
+
 Texture::Texture(GLuint width, GLuint height, unsigned char data[], CreateTexture func) : m_Width(width), m_Height(height)
 {
     func(&m_TexID, m_Width, m_Height, data);
@@ -69,6 +71,16 @@ void Texture::setBindFunc(BindTexture func)
 void Texture::bind()
 {
     m_BindFunc(m_TexID, m_SpecTexID);
+}
+
+void Texture::setUnbindFunc(Texture::BindTexture func)
+{
+    m_UnbindFunc = func;
+}
+
+void Texture::unbind()
+{
+    m_UnbindFunc(m_TexID, m_SpecTexID);
 }
 
 GLuint Texture::getTexID() { return m_TexID; }

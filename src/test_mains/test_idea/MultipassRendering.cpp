@@ -28,6 +28,7 @@ ShaderProgram* colorShader;
 ShaderProgram* texShader;
 Texture* whiteColor;
 Texture* blueColor;
+Texture* cyanGlass;
 Texture* redColor;
 GLuint blueTex;
 GLuint redTex;
@@ -36,16 +37,21 @@ Sphere* sphere;
 Cube* cube;
 Cube* obb;
 Cube* aobb;
+Renderable* selection;
+Cube* highlight;
+bool renderHighlight = false;
 Camera* cam;
 glm::mat4 Projection;
 // ray detection modified from opengl-tutorial.com
 bool obbIntersection(glm::vec3 origin, glm::vec3 direction, glm::vec3 aabb_min, glm::vec3 aabb_max, glm::mat4 Model, float& intersection_dist);
+void calcIntersectrays(glm::vec2 mousePos, glm::vec3& origin, glm::vec3& direction);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseMoveCallback(GLFWwindow*, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow*, int button, int action, int mods);
 void render();
 
-int main() {
+int main()
+{
 
     WindowDimensions = glm::vec2(800, 800);
 
@@ -57,15 +63,17 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif // OSX
 
-    GLFWwindow* window = glfwCreateWindow(WindowDimensions.x, WindowDimensions.y, "GLutils Tests", nullptr, nullptr);
-    if(window == nullptr) {
+    GLFWwindow *window = glfwCreateWindow(WindowDimensions.x, WindowDimensions.y, "GLutils Tests", nullptr, nullptr);
+    if (window == nullptr)
+    {
         std::cout << "Window creation failed" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+    {
         std::cout << "GLAD init failed" << std::endl;
     }
 
@@ -83,9 +91,12 @@ int main() {
     texShader = new ShaderProgram(nullptr, "shaders/materialVert.glsl", "shaders/materialFrag.glsl");
 
     sphere = new Sphere(0.5f, 10, 10);
+    sphere->setLocalPosition(glm::vec3(2.0f, 0.0f, 0.0f));
     cube = new Cube();
+    cube->setLocalPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
     obb = new Cube();
     aobb = new Cube();
+    highlight = new Cube();
     Projection = glm::perspective(45.0f, WindowDimensions.x / WindowDimensions.y, 0.1f, 100.0f);
     cam = new Camera(glm::vec3(5, 5, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
@@ -110,10 +121,35 @@ int main() {
                     static_cast<unsigned char>(1.0f * 255),
                     static_cast<unsigned char>(1.0f * 255)
             };
+    unsigned char cyan[] =
+            {
+                    static_cast<unsigned char>(0),
+                    static_cast<unsigned char>(255),
+                    static_cast<unsigned char>(255),
+                    static_cast<unsigned char>(0.4f * 255)
+            };
 
     whiteColor = new Texture(1, 1, white);
     blueColor = new Texture(1, 1, blue);
     redColor = new Texture(1, 1, red);
+    cyanGlass = new Texture(1, 1, cyan);
+
+    cyanGlass->setBindFunc(
+            [](GLuint texID, GLuint)
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texID);
+            }
+            );
+    cyanGlass->setUnbindFunc(
+            [](GLuint, GLuint)
+            {
+                glDisable(GL_BLEND);
+                glDepthFunc(GL_LESS);
+            }
+            );
 
 //    glGenTextures(1, &blueTex);
 //    glBindTexture(GL_TEXTURE_2D, blueTex);
@@ -179,19 +215,26 @@ void render()
     obb->render();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
-    cube->setLocalPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
+
     texShader->setMatrix4f("MMat", cube->getTransformationMatrix());
     blueColor->bind();
     cube->render();
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
     glDepthFunc(GL_EQUAL);
     redColor->bind();
     cube->render();
-    glActiveTexture(0);
     glDisable(GL_BLEND);
     glDepthFunc(GL_LESS);
+
+    if(renderHighlight)
+    {
+        texShader->setMatrix4f("MMat", highlight->getTransformationMatrix());
+        cyanGlass->bind();
+        highlight->render();
+        cyanGlass->unbind();
+    }
 }
 
 bool obbIntersection(glm::vec3 origin, glm::vec3 direction, glm::vec3 aabb_min, glm::vec3 aabb_max, glm::mat4 Model, float& intersection_dist)
@@ -241,6 +284,17 @@ bool obbIntersection(glm::vec3 origin, glm::vec3 direction, glm::vec3 aabb_min, 
 
 }
 
+void calcIntersectrays(glm::vec2 mousePos, glm::vec3& origin, glm::vec3& direction)
+{
+    float mouseY = WindowDimensions.y - mousePos.y;
+    glm::vec3 v0 = glm::unProject(glm::vec3(mousePos.x, mouseY, 0.0f), cam->getViewMatrix(), Projection, glm::vec4(0.0f, 0.0f, WindowDimensions.x, WindowDimensions.y));
+    glm::vec3 v1 = glm::unProject(glm::vec3(mousePos.x, mouseY, 1.0f), cam->getViewMatrix(), Projection, glm::vec4(0.0f, 0.0f, WindowDimensions.x, WindowDimensions.y));
+
+    origin = (cam->getEyePos() + cam->getCamTranslation()) * cam->getOrientation();
+    direction = v1 - v0;
+
+}
+
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 
@@ -251,7 +305,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 }
 
-Renderable* selection;
 double lx, ly = 0.0;
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -267,21 +320,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
         glfwGetCursorPos(window, &xpos, &ypos);
         lx = xpos;
         ly = ypos;
-
-        glm::vec4 rayStart((xpos/(float)WindowDimensions.x - 0.5f) * 2.0f, (ypos/(float)WindowDimensions.y - 0.5f) * 2.0f, -1.0f, 1.0f);
-        glm::vec4 rayEnd((xpos/(float)WindowDimensions.x - 0.5f) * 2.0f, (ypos/(float)WindowDimensions.y - 0.5f) * 2.0f, 0.0f, 1.0f);
-
-        glm::mat4 M = glm::inverse(Projection * cam->getViewMatrix());
-        glm::vec4 rayStartWorld = M * rayStart;
-        rayStartWorld /= rayStartWorld.w;
-        glm::vec4 rayEndWorld = M * rayEnd;
-        rayEndWorld /= rayEndWorld.w;
-
-        glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
-        rayDirWorld = glm::normalize(rayDirWorld);
-
-        origin = glm::vec3(rayStartWorld);
-        dir = rayDirWorld;
+        calcIntersectrays({xpos, ypos}, origin, dir);
 
         bool intersection = obbIntersection(origin, dir, min, max, sphere->getTransformationMatrix(), dist);
         if(intersection)
@@ -292,7 +331,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     else if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
         selection = nullptr;
+    } else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        renderHighlight = false;
+        glfwSetCursorPos(window, WindowDimensions.x/2.0f, WindowDimensions.y/2.0f);
     }
+
 }
 
 void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
@@ -308,6 +352,36 @@ void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
     {
         selection->rotateLocal((lx - xpos) * -0.5f, glm::normalize(cam->getWorldForward()*cam->getOrientation()));
         selection->rotateLocal((ly - ypos) * -0.5f, cam->getWorldRight()*cam->getOrientation());
+    }
+    else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
+    {
+        float dist;
+        glm::vec3 min(-0.5f);
+        glm::vec3 max(0.5f);
+
+        glm::vec3 origin;
+        glm::vec3 dir;
+        calcIntersectrays({xpos, ypos}, origin, dir);
+
+        Renderable* intersection = nullptr;
+        std::vector<Renderable*> objs = {cube, sphere};
+
+        for(auto* obj : objs)
+        {
+            if(obbIntersection(origin, dir, min, max, obj->getTransformationMatrix(), dist))
+            {
+                intersection = obj;
+                break;
+            }
+        }
+
+        if(intersection != nullptr)
+        {
+            highlight->setLocalPosition(intersection->getPosition());
+            highlight->setLocalOrientation(intersection->getOrientation());
+            highlight->setLocalScale(intersection->getScale()*1.2f);
+            renderHighlight = true;
+        }
     }
     ly = ypos;
     lx = xpos;

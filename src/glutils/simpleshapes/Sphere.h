@@ -7,6 +7,7 @@
 
 #include <array>
 #include "../Renderable.h"
+#include "../mesh/Vertex.h"
 
 /// Simple uniform color UV sphere
 class Sphere : public Renderable
@@ -16,8 +17,7 @@ public:
     void render() override;
 
 private:
-    std::vector<GLfloat>    vertices;
-    std::vector<GLfloat>    normals;
+    std::vector<Vertex>     vertices;
     std::vector<GLuint>     indices;
 
     GLuint VAO, VBO, EBO;

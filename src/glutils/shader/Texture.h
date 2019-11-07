@@ -21,8 +21,11 @@ private:
     static void bind_default(GLuint, GLuint);
     // Default bind func with specular map
     static void bind_specDefault(GLuint, GLuint);
+    // Default unbind func. Doesn't actually do anything
+    static void unbind_default(GLuint, GLuint);
 
     BindTexture m_BindFunc;
+    BindTexture m_UnbindFunc = unbind_default;
     GLuint m_TexID;
     GLuint m_SpecTexID;
     GLuint m_Width;
@@ -45,7 +48,10 @@ public:
     /// Custom bind function, for if the texture should have blend funcs, depth funcs, etc
         //! Complete override of default bind. EVERYTHING about binding texture(s) (regular and spec map) must be done
     void setBindFunc(BindTexture func);
+    /// Custom unbind function. Does nothing by default
+    void setUnbindFunc(BindTexture func);
     void bind();
+    void unbind();
 
     GLuint getTexID();
     GLuint getSpecTexID();
